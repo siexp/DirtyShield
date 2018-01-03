@@ -1,57 +1,95 @@
+"""
+PyScript that gather information about given user
+"""
 import argparse
-import collections
-import logging
 import requests
 
-Auth = collections.namedtuple('Auth', 'uid sid')
-
-def authenticate( login, password ):
-    auth = { "username": login, "password": password }
-    resp = requests.post( "https://dirty.ru/api/auth/login/", auth )
-
-    body = resp.json()
-
-    #if body[ 'status' ] == 'error':
-    #    raise Exception( body['errors'][0]['description'] )
-
-    return Auth( uid = body[ 'uid' ], sid = body[ 'sid' ] )
-
-def bans( target ):
-    resp = requests.get( "https://d3.ru/api/users/" + target + "/bans/" )
+def bans(target):
+    resp = requests.get("https://d3.ru/api/users/{}/bans/".format(target))
     body = resp.json()
 
     for ban in body['bans']:
-        print( "Banned at {:10} by {:16} for '{}'".format( ban['domain']['prefix'], ban['moderator']['login'], ban['reason'] ) )
+        subdomain = ban['domain']['prefix']
+        moderator = ban['moderator']['login']
+        reason = ban['reason']
+        print("{:20} by {:16} for '{}'".format(subdomain, moderator, reason))
 
-def domains( target ):
-    resp = requests.get( "https://d3.ru/api/users/" + target + "/domains/" )
+def domains(target):
+    resp = requests.get("https://d3.ru/api/users/{}/domains/".format(target))
     body = resp.json()
     
     for domain in body['domains']:
-        print( "Created {:10} subdomain".format( domain['title'] ) )
+        print("{:20}".format(domain['title']))
 
-if __name__ == "__main__":
-    logger = logging.getLogger('DirtyShield')
-    logger.setLevel( logging.INFO )
+def posts(target):
+    summary = {}
 
-    parser = argparse.ArgumentParser( description='PyScript I will tell you who is your friend' )
+    page = 1
+    while True:
+        resp = requests.get("https://d3.ru/api/users/{}/posts/?page={};per_page=42".format(target, page))
+        body = resp.json()
 
+        if not body['posts']:
+            break
 
-    # auth info
-    parser.add_argument( 'login', help = 'your username' )
-    parser.add_argument( 'password', help = 'your password' )
+        for post in body['posts']:
+            subdomain = post['domain']['prefix']
+            if subdomain not in summary:                
+                summary[subdomain] = { "upvote":0, "downvote": 0 }
+            
+            rating = int(post['rating'])
+            if rating >= 0 :
+                summary[subdomain]['upvote'] += rating
+            else:
+                summary[subdomain]['downvote'] += rating
 
-    # target
-    parser.add_argument( 'target', help = 'login you are interested in' )
+        page += 1
+    
+    for key, value in summary.items():
+        print("|{:20}| total {:>5d}| upvotes {:>5d}| downvotes {:>5d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
 
-    args = parser.parse_args()
+def comments(target):
+    summary = {}
 
-    logger.info( 'Gathering info' )
-    auth = authenticate( args.login, args.password )
-    #logger.info( "uid %s", auth.uid )
-    #logger.info( "uid %s", auth.sid )
+    page = 1
+    while True:
+        resp = requests.get("https://d3.ru/api/users/{}/comments/?page={};per_page=42".format(target, page))
+        body = resp.json()
 
-    bans( args.target )
-    domains( args.target )
+        if not body['comments']:
+            break
 
-    logger.info( 'Done' )
+        for comment in body['comments']:
+            subdomain = comment['domain']['prefix']
+            if subdomain not in summary:                
+                summary[subdomain] = { "upvote":0, "downvote": 0 }
+            
+            rating = int(comment['rating'])
+            if rating >= 0 :
+                summary[subdomain]['upvote'] += rating
+            else:
+                summary[subdomain]['downvote'] += rating
+
+        page += 1
+
+    for key, value in summary.items():
+        print("|{:20}| total {:>5d}| upvotes {:>5d}| downvotes {:>5d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
+
+if __name__ == "__main__": 
+    parser = argparse.ArgumentParser(description='PyScript I will tell you who is your friend')
+    parser.add_argument('target', help = 'login you are interested in')
+
+    ARGS = parser.parse_args()
+
+    print("{:_^67}".format("Banned at subdomains"))
+    bans(ARGS.target)
+
+    print("{:_^67}".format("Owned subdomains"))
+    domains(ARGS.target)
+
+    print("{:_^67}".format("Rating by posts"))
+    posts(ARGS.target)
+
+    print("\n{:_^67}".format("Rating by comments"))
+    comments(ARGS.target)
+    print("{:_<67}\n".format(""))
