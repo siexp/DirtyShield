@@ -33,7 +33,13 @@ def posts(target):
             break
 
         for post in body['posts']:
+            if 'is_hidden' in post:
+                continue
+
             subdomain = post['domain']['prefix']
+            if not subdomain:
+                continue
+
             if subdomain not in summary:
                 summary[subdomain] = { "upvote":0, "downvote": 0 }
 
@@ -60,7 +66,13 @@ def comments(target):
             break
 
         for comment in body['comments']:
+            if 'is_hidden' in comment:
+                continue
+
             subdomain = comment['domain']['prefix']
+            if not subdomain:
+                continue
+
             if subdomain not in summary:
                 summary[subdomain] = { "upvote":0, "downvote": 0 }
 
