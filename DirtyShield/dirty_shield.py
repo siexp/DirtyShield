@@ -34,17 +34,17 @@ def posts(target):
 
         for post in body['posts']:
             subdomain = post['domain']['prefix']
-            if subdomain not in summary:                
+            if subdomain not in summary:
                 summary[subdomain] = { "upvote":0, "downvote": 0 }
-            
+
             rating = int(post['rating'])
-            if rating >= 0 :
+            if rating >= 0:
                 summary[subdomain]['upvote'] += rating
             else:
                 summary[subdomain]['downvote'] += rating
 
         page += 1
-    
+
     for key, value in summary.items():
         print("|{:20}| total {:>5d}| upvotes {:>5d}| downvotes {:>5d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
 
@@ -61,11 +61,11 @@ def comments(target):
 
         for comment in body['comments']:
             subdomain = comment['domain']['prefix']
-            if subdomain not in summary:                
+            if subdomain not in summary:
                 summary[subdomain] = { "upvote":0, "downvote": 0 }
-            
+
             rating = int(comment['rating'])
-            if rating >= 0 :
+            if rating >= 0:
                 summary[subdomain]['upvote'] += rating
             else:
                 summary[subdomain]['downvote'] += rating
@@ -75,11 +75,11 @@ def comments(target):
     for key, value in summary.items():
         print("|{:20}| total {:>5d}| upvotes {:>5d}| downvotes {:>5d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
 
-if __name__ == "__main__": 
-    parser = argparse.ArgumentParser(description='PyScript I will tell you who is your friend')
-    parser.add_argument('target', help = 'login you are interested in')
+if __name__ == "__main__":
+    PARSER = argparse.ArgumentParser(description='PyScript I will tell you who is your friend')
+    PARSER.add_argument('target', help = 'login you are interested in')
 
-    ARGS = parser.parse_args()
+    ARGS = PARSER.parse_args()
 
     print("{:_^67}".format("Banned at subdomains"))
     bans(ARGS.target)
