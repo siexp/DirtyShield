@@ -43,16 +43,16 @@ def posts(target):
             if subdomain not in summary:
                 summary[subdomain] = { "upvote":0, "downvote": 0 }
 
-            rating = int(post['rating'])
-            if rating >= 0:
-                summary[subdomain]['upvote'] += rating
-            else:
-                summary[subdomain]['downvote'] += rating
+            if post['rating'] != None:
+                rating = int(post['rating'])
+                if rating >= 0:
+                    summary[subdomain]['upvote'] += rating
+                else:
+                    summary[subdomain]['downvote'] += rating
 
         page += 1
+    return summary
 
-    for key, value in summary.items():
-        print("|{:20}| total {:>5d}| upvotes {:>5d}| downvotes {:>5d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
 
 def comments(target):
     summary = {}
@@ -76,16 +76,28 @@ def comments(target):
             if subdomain not in summary:
                 summary[subdomain] = { "upvote":0, "downvote": 0 }
 
-            rating = int(comment['rating'])
-            if rating >= 0:
-                summary[subdomain]['upvote'] += rating
-            else:
-                summary[subdomain]['downvote'] += rating
+            if comment['rating'] != None:
+                rating = int(comment['rating'])
+                if rating >= 0:
+                    summary[subdomain]['upvote'] += rating
+                else:
+                    summary[subdomain]['downvote'] += rating
 
         page += 1
 
+    return summary
+
+def printSummary(summary, title):
+    print("{:_^52}".format(title))
+    print("|{:20}{:10}{:10}{:10}|".format("SUBDOMAIN","TOTAL", "UPVOTE", "DOWNVOTE"))    
+    print("{:=<52}".format(""))
+    
     for key, value in summary.items():
-        print("|{:20}| total {:>5d}| upvotes {:>5d}| downvotes {:>5d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
+        if value['upvote'] != 0 or value['downvote'] != 0:
+            print("|{:20}| {:>8d}| {:>8d}| {:>8d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
+    
+    print("{:=<52}\n".format(""))
+
 
 if __name__ == "__main__":
     PARSER = argparse.ArgumentParser(description='PyScript I will tell you who is your friend')
@@ -93,15 +105,14 @@ if __name__ == "__main__":
 
     ARGS = PARSER.parse_args()
 
-    print("{:_^67}".format("Banned at subdomains"))
+    print("{:_^52}".format("Banned at subdomains"))
     bans(ARGS.target)
 
-    print("{:_^67}".format("Owned subdomains"))
+    print("{:_^52}".format("Owned subdomains"))
     domains(ARGS.target)
+    
+    summary = posts(ARGS.target)
+    printSummary(summary, "Rating by Posts")
 
-    print("{:_^67}".format("Rating by posts"))
-    posts(ARGS.target)
-
-    print("\n{:_^67}".format("Rating by comments"))
-    comments(ARGS.target)
-    print("{:_<67}\n".format(""))
+    summary = comments(ARGS.target)
+    printSummary(summary, "Rating by comments")
