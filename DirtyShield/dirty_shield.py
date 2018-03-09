@@ -28,18 +28,21 @@ def domains(target):
     
     print("{:=<52}".format(""))
 
-def posts(target):
+"""
+Goes throughout target's posts or comments and collects information about upvotes and downvotes 
+"""
+def traverse(target,trace):
     summary = {}
 
     page = 1
     while True:
-        resp = requests.get("https://d3.ru/api/users/{}/posts/?page={};per_page=42".format(target, page))
+        resp = requests.get("https://d3.ru/api/users/{}/{}/?page={};per_page=42".format(target, trace, page))
         body = resp.json()
 
-        if not body['posts']:
+        if not body[trace]:
             break
 
-        for post in body['posts']:
+        for post in body[trace]:
             if 'is_hidden' in post:
                 continue
 
@@ -60,44 +63,10 @@ def posts(target):
         page += 1
     return summary
 
-
-def comments(target):
-    summary = {}
-
-    page = 1
-    while True:
-        resp = requests.get("https://d3.ru/api/users/{}/comments/?page={};per_page=42".format(target, page))
-        body = resp.json()
-
-        if not body['comments']:
-            break
-
-        for comment in body['comments']:
-            if 'is_hidden' in comment:
-                continue
-
-            subdomain = comment['domain']['prefix'].encode('utf-8').strip()
-            if not subdomain:
-                continue
-
-            if subdomain not in summary:
-                summary[subdomain] = { "upvote":0, "downvote": 0 }
-
-            if comment['rating'] != None:
-                rating = int(comment['rating'])
-                if rating >= 0:
-                    summary[subdomain]['upvote'] += rating
-                else:
-                    summary[subdomain]['downvote'] += rating
-
-        page += 1
-
-    return summary
-
 def printSummary(summary, title):
     if len(summary) == 0:
         return
-        
+
     print("{:_^52}".format(title))
     print("|{:20}{:10}{:10}{:10}|".format("SUBDOMAIN","TOTAL", "UPVOTE", "DOWNVOTE"))    
     print("{:=<52}".format(""))
@@ -148,8 +117,8 @@ if __name__ == "__main__":
     if ARGS.full:
         printFlavor = printSummary
         
-    summary = posts(ARGS.target)
+    summary = traverse(ARGS.target, "posts")
     printFlavor(summary, "Rating by Posts")
 
-    summary = comments(ARGS.target)
+    summary = traverse(ARGS.target, "comments")
     printFlavor(summary, "Rating by comments")
