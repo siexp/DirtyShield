@@ -63,13 +63,16 @@ def traverse(target,trace):
         page += 1
     return summary
 
+
+def printHeader(title):
+    print("{:_^52}".format(title))
+    print("|{:^20}|{:^9}|{:^9}|{:^9}|".format("SUBDOMAIN","TOTAL", "UPVOTE", "DOWNVOTE"))    
+
 def printSummary(summary, title):
     if len(summary) == 0:
         return
 
-    print("{:_^52}".format(title))
-    print("|{:20}{:10}{:10}{:10}|".format("SUBDOMAIN","TOTAL", "UPVOTE", "DOWNVOTE"))    
-    print("{:=<52}".format(""))
+    printHeader(title)
     
     orderedByTotal = sorted( summary.items(), key = lambda item: item[1]['upvote'] + item[1]['downvote'], reverse=True)
     for key, value in orderedByTotal:
@@ -78,21 +81,16 @@ def printSummary(summary, title):
     
     print("{:=<52}\n".format(""))
 
-
-def top5Header(title, subtitle):
-    print("{:_^52}".format(title + ": " + subtitle))
-    print("|{:^20}|{:^9}|{:^9}|{:^9}|".format("SUBDOMAIN","TOTAL", "UPVOTE", "DOWNVOTE"))    
-
 def printTop5(summary, title):
     if len(summary) == 0:
         return
 
-    top5Header(title, "best")
+    printHeader(title + ": best")
     for key, value in sorted( summary.items(), key=lambda item: item[1]['upvote'], reverse=True )[:5]:
         if value['upvote'] != 0 or value['downvote'] != 0:
             print("|{:20}| {:>8d}| {:>8d}| {:>8d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
 
-    top5Header(title, "worst")
+    printHeader(title + ": worst")
     for key, value in sorted( summary.items(), key=lambda item: item[1]['downvote'] )[:5]:
         if value['upvote'] != 0 or value['downvote'] != 0:
             print("|{:20}| {:>8d}| {:>8d}| {:>8d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
