@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 PyScript that gather information about given user
 """
@@ -9,17 +11,22 @@ def bans(target):
     body = resp.json()
 
     for ban in body['bans']:
-        subdomain = ban['domain']['prefix']
-        moderator = ban['moderator']['login']
-        reason = ban['reason']
+        subdomain = ban['domain']['prefix'].encode('utf-8').strip()
+        moderator = ban['moderator']['login'].encode('utf-8').strip()
+        reason = ban['reason'].encode('utf-8').strip()
         print("{:20} by {:16} for '{}'".format(subdomain, moderator, reason))
+
+    print("{:=<52}".format(""))
 
 def domains(target):
     resp = requests.get("https://d3.ru/api/users/{}/domains/".format(target))
     body = resp.json()
     
     for domain in body['domains']:
-        print("{:20}".format(domain['title']))
+        title = domain['title'].encode('utf-8').strip()
+        print("{:20}".format(title))
+    
+    print("{:=<52}".format(""))
 
 def posts(target):
     summary = {}
@@ -36,7 +43,7 @@ def posts(target):
             if 'is_hidden' in post:
                 continue
 
-            subdomain = post['domain']['prefix']
+            subdomain = post['domain']['prefix'].encode('utf-8').strip()
             if not subdomain:
                 continue
 
@@ -69,7 +76,7 @@ def comments(target):
             if 'is_hidden' in comment:
                 continue
 
-            subdomain = comment['domain']['prefix']
+            subdomain = comment['domain']['prefix'].encode('utf-8').strip()
             if not subdomain:
                 continue
 
@@ -88,31 +95,61 @@ def comments(target):
     return summary
 
 def printSummary(summary, title):
+    if len(summary) == 0:
+        return
+        
     print("{:_^52}".format(title))
     print("|{:20}{:10}{:10}{:10}|".format("SUBDOMAIN","TOTAL", "UPVOTE", "DOWNVOTE"))    
     print("{:=<52}".format(""))
     
-    for key, value in summary.items():
+    orderedByTotal = sorted( summary.items(), key = lambda item: item[1]['upvote'] + item[1]['downvote'], reverse=True)
+    for key, value in orderedByTotal:
         if value['upvote'] != 0 or value['downvote'] != 0:
             print("|{:20}| {:>8d}| {:>8d}| {:>8d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
     
     print("{:=<52}\n".format(""))
 
 
+def top5Header(title, subtitle):
+    print("{:_^52}".format(title + ": " + subtitle))
+    print("|{:^20}|{:^9}|{:^9}|{:^9}|".format("SUBDOMAIN","TOTAL", "UPVOTE", "DOWNVOTE"))    
+
+def printTop5(summary, title):
+    if len(summary) == 0:
+        return
+
+    top5Header(title, "best")
+    for key, value in sorted( summary.items(), key=lambda item: item[1]['upvote'], reverse=True )[:5]:
+        if value['upvote'] != 0 or value['downvote'] != 0:
+            print("|{:20}| {:>8d}| {:>8d}| {:>8d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
+
+    top5Header(title, "worst")
+    for key, value in sorted( summary.items(), key=lambda item: item[1]['downvote'] )[:5]:
+        if value['upvote'] != 0 or value['downvote'] != 0:
+            print("|{:20}| {:>8d}| {:>8d}| {:>8d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
+    
+    print("{:=<52}".format(""))
+
 if __name__ == "__main__":
     PARSER = argparse.ArgumentParser(description='PyScript I will tell you who is your friend')
     PARSER.add_argument('target', help = 'login you are interested in')
+    PARSER.add_argument('--full', help = 'Print full statistics', action = "store_true")
 
     ARGS = PARSER.parse_args()
 
+    if ARGS.full:
+        print("{:_^52}".format("Owned subdomains"))
+        domains(ARGS.target)
+
     print("{:_^52}".format("Banned at subdomains"))
     bans(ARGS.target)
-
-    print("{:_^52}".format("Owned subdomains"))
-    domains(ARGS.target)
     
+    printFlavor = printTop5
+    if ARGS.full:
+        printFlavor = printSummary
+        
     summary = posts(ARGS.target)
-    printSummary(summary, "Rating by Posts")
+    printFlavor(summary, "Rating by Posts")
 
     summary = comments(ARGS.target)
-    printSummary(summary, "Rating by comments")
+    printFlavor(summary, "Rating by comments")
