@@ -66,7 +66,12 @@ def traverse(target,trace):
 
 def printHeader(title):
     print("{:_^52}".format(title))
-    print("|{:^20}|{:^9}|{:^9}|{:^9}|".format("SUBDOMAIN","TOTAL", "UPVOTE", "DOWNVOTE"))    
+    print("|{:^20}|{:^9}|{:^9}|{:^9}|".format("SUBDOMAIN","TOTAL", "UPVOTE", "DOWNVOTE"))
+
+def printData(summary):
+    for key, value in summary:
+        if value['upvote'] != 0 or value['downvote'] != 0:
+            print("|{:20}| {:>8d}| {:>8d}| {:>8d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
 
 def printSummary(summary, title):
     if len(summary) == 0:
@@ -75,9 +80,7 @@ def printSummary(summary, title):
     printHeader(title)
     
     orderedByTotal = sorted( summary.items(), key = lambda item: item[1]['upvote'] + item[1]['downvote'], reverse=True)
-    for key, value in orderedByTotal:
-        if value['upvote'] != 0 or value['downvote'] != 0:
-            print("|{:20}| {:>8d}| {:>8d}| {:>8d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
+    printData(orderedByTotal)
     
     print("{:=<52}\n".format(""))
 
@@ -86,14 +89,12 @@ def printTop5(summary, title):
         return
 
     printHeader(title + ": best")
-    for key, value in sorted( summary.items(), key=lambda item: item[1]['upvote'], reverse=True )[:5]:
-        if value['upvote'] != 0 or value['downvote'] != 0:
-            print("|{:20}| {:>8d}| {:>8d}| {:>8d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
+    best = sorted( summary.items(), key=lambda item: item[1]['upvote'], reverse=True )[:5]
+    printData(best)
 
     printHeader(title + ": worst")
-    for key, value in sorted( summary.items(), key=lambda item: item[1]['downvote'] )[:5]:
-        if value['upvote'] != 0 or value['downvote'] != 0:
-            print("|{:20}| {:>8d}| {:>8d}| {:>8d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
+    worst = sorted( summary.items(), key=lambda item: item[1]['downvote'] )[:5]
+    printData(worst)
     
     print("{:=<52}".format(""))
 
