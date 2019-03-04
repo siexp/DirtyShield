@@ -14,7 +14,7 @@ def bans(target):
         subdomain = ban['domain']['prefix'].encode('utf-8').strip()
         moderator = ban['moderator']['login'].encode('utf-8').strip()
         reason = ban['reason'].encode('utf-8').strip()
-        print("{:20} by {:16} for '{}'".format(subdomain, moderator, reason))
+        print("{:20} by {:16} for '{}'".format(subdomain.decode('utf-8'), moderator.decode('utf-8'), reason.decode('utf-8')))
 
     print("{:=<52}".format(""))
 
@@ -24,7 +24,7 @@ def domains(target):
     
     for domain in body['domains']:
         title = domain['title'].encode('utf-8').strip()
-        print("{:20}".format(title))
+        print("{:20}".format(title.decode('utf-8')))
     
     print("{:=<52}".format(""))
 
@@ -71,7 +71,7 @@ def printHeader(title):
 def printData(summary):
     for key, value in summary:
         if value['upvote'] != 0 or value['downvote'] != 0:
-            print("|{:20}| {:>8d}| {:>8d}| {:>8d}|".format(key, value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
+            print("|{:20}| {:>8d}| {:>8d}| {:>8d}|".format(key.decode('utf-8'), value['upvote'] + value['downvote'], value['upvote'], value['downvote']))
 
 def printSummary(summary, title):
     if len(summary) == 0:
